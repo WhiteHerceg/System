@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PRACTICE 17
+# PRACTICE17
 
 echo "=== 1. Basic Output ==="
 echo "Hello, World!"
