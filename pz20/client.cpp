@@ -1,4 +1,11 @@
+/**
+ * @file network_client.cpp
+ * @brief Client for sum calculation service
+ * @version 1.2.0
+ */
+
 #include <iostream>
+#include <limits>
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -8,76 +15,114 @@
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <unistd.h>
+    #include <errno.h>
     #define INVALID_SOCKET -1
     #define SOCKET_ERROR -1
     #define closesocket close
     typedef int SOCKET;
 #endif
 
-int main() {
+// Simple RAII wrapper
+class SocketInitializer {
+public:
+    SocketInitializer() : ok_(true) {
 #ifdef _WIN32
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "WSAStartup failed.\n";
-        return 1;
-    }
+        WSADATA wsa;
+        if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+            std::cerr << "[Client] Failed to initialize networking\n";
+            ok_ = false;
+        }
 #endif
+    }
+    
+    ~SocketInitializer() {
+#ifdef _WIN32
+        WSACleanup();
+#endif
+    }
+    
+    bool isOk() const { return ok_; }
+    
+private:
+    bool ok_;
+};
 
+int readNumber(const std::string& prompt) {
+    int value;
+    std::cout << prompt;
+    while (!(std::cin >> value)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input. Please enter an integer: ";
+    }
+    return value;
+}
+
+int main() {
+    SocketInitializer netInit;
+    if (!netInit.isOk()) return 1;
+    
+    // Create socket
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        std::cerr << "Socket creation failed.\n";
+        std::cerr << "[Client] Could not create socket\n";
         return 1;
     }
-
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(8080);
+    
+    // Configure server address
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
     
 #ifdef _WIN32
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 #else
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        std::cerr << "Invalid address/ Address not supported\n";
+    if (inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr) <= 0) {
+        std::cerr << "[Client] Invalid server address\n";
+        closesocket(sock);
         return 1;
     }
 #endif
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR) {
-        std::cerr << "Connection to server failed.\n";
+    
+    // Connect
+    std::cout << "[Client] Connecting to server at 127.0.0.1:8080...\n";
+    
+    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+        std::cerr << "[Client] Connection failed. Is the server running?\n";
+        closesocket(sock);
         return 1;
     }
-
-    std::cout << "[Client] Successfully connected to server!\n";
-
+    
+    std::cout << "[Client] Connected successfully!\n";
+    
+    // Get input
     int numbers[2];
-    std::cout << "Enter first number: ";
-    if (!(std::cin >> numbers[0])) {
-        std::cerr << "Invalid input. Please enter a valid integer.\n";
+    numbers[0] = readNumber("Enter first number: ");
+    numbers[1] = readNumber("Enter second number: ");
+    
+    // Send data
+    if (send(sock, (char*)numbers, sizeof(numbers), 0) != sizeof(numbers)) {
+        std::cerr << "[Client] Failed to send data\n";
+        closesocket(sock);
         return 1;
     }
     
-    std::cout << "Enter second number: ";
-    if (!(std::cin >> numbers[1])) {
-        std::cerr << "Invalid input. Please enter a valid integer.\n";
-        return 1;
-    }
-
-    send(sock, (char*)numbers, sizeof(numbers), 0);
-
-    int sum;
-    int bytesRead = recv(sock, (char*)&sum, sizeof(sum), 0);
+    std::cout << "[Client] Sent: " << numbers[0] << ", " << numbers[1] << "\n";
     
-    if (bytesRead == sizeof(sum)) {
-        std::cout << "[Client] Server returned sum: " << sum << "\n";
+    // Receive result
+    int result;
+    int bytes = recv(sock, (char*)&result, sizeof(result), 0);
+    
+    if (bytes == sizeof(result)) {
+        std::cout << "[Client] Server response: " << numbers[0] 
+                  << " + " << numbers[1] << " = " << result << "\n";
     } else {
-        std::cerr << "[Client] Error receiving sum from server.\n";
+        std::cerr << "[Client] Failed to receive result (got " 
+                  << bytes << " bytes)\n";
     }
-
+    
     closesocket(sock);
-
-#ifdef _WIN32
-    WSACleanup();
-#endif
-
+    std::cout << "[Client] Disconnected\n";
+    
     return 0;
 }
