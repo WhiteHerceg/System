@@ -1,1 +1,79 @@
+#!/bin/bash
 
+# PRACTICE 17
+
+echo "=== 1. Basic Output ==="
+echo "Hello, World!"
+
+echo -e "\n=== 2. Variables and Input ==="
+my_var=10
+echo "Value of my_var: $my_var"
+
+echo -e "\n=== 3. Command Line Arguments ==="
+# Usage: ./practice17.sh arg1 arg2 arg3
+echo "First argument (\$1): $1"
+echo "Third argument (\$3): $3"
+echo "Total arguments (\$#): $#"
+
+echo -e "\n=== 4. Simple Arithmetic ==="
+a=5
+b=7
+sum=$((a + b))
+echo "Sum of $a and $b is: $sum"
+
+echo -e "\n=== 5. Conditional Statements ==="
+if [ "$USER" = "root" ]; then
+    echo "Warning: you are running as root!"
+else
+    echo "Current user ($USER) is not root."
+fi
+
+echo -e "\n=== 6. File System Operations ==="
+current_dir=$(pwd)
+echo "Current directory: $current_dir"
+
+mkdir -p test_dir/sub_dir
+touch test_dir/file1.txt
+echo "Created test_dir and file1.txt"
+
+cp test_dir/file1.txt test_dir/sub_dir/file2.txt
+mv test_dir/file1.txt test_dir/file3.txt
+echo "Files copied and moved"
+
+touch test_dir/file_{A,B,C}.log
+echo "Created files: file_A.log, file_B.log, file_C.log"
+
+echo -e "\n=== Files in test_dir ==="
+ls -1 test_dir | grep -v "sub_dir" | sort
+
+rm -rf test_dir
+echo "Test directory removed."
+
+echo -e "\n=== Control Questions Answers ==="
+cat << 'EOF'
+1. How to print "Hello, World!"?
+Ans: echo "Hello, World!"
+
+2. Which command is used to read user input?
+Ans: The 'read' command. Example: read my_variable
+
+3. How to declare and use a variable?
+Ans: my_var=10; echo $my_var
+
+4. How to access command line arguments?
+Ans: $1 for the first, $3 for the third.
+
+5. How to do basic arithmetic?
+Ans: sum=$((var1 + var2))
+
+6. What is used for conditional branching?
+Ans: if-then-elif-else-fi statement.
+
+7. Example of checking if $USER is "root":
+Ans:
+if [ "$USER" = "root" ]; then
+    echo "You are superuser"
+else
+    echo "You are a regular user"
+fi
+EOF
