@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# PRACTICE19
+
+TARGET_DIR="Images"
+
+if ! ls *.jpg >/dev/null 2>&1; then
+    echo "No .jpg files found in the current directory."
+    exit 0
+fi
+
+if [ ! -d "$TARGET_DIR" ]; then
+    mkdir "$TARGET_DIR"
+    echo "Directory '$TARGET_DIR' created."
+fi
+
+mv *.jpg "$TARGET_DIR/"
+echo "All .jpg files moved to '$TARGET_DIR'."
+
+echo -e "\n=== Control Questions Answers ==="
+cat << 'EOF'
+1. What is Bash?
+Ans: Command language interpreter (shell) for Unix-like systems.
+
+2. Difference between > and >> ?
+Ans: > overwrites the file, >> appends to the file.
+
+3. Meaning of $0, $#, $1, $?, $$?
+Ans: $0 = script name, $# = arg count, $1 = first arg, $? = exit status of last command, $$ = PID of the script.
+
+4. Example of if with && (AND)?
+Ans: if [ -e "file.txt" ] && [ -s "file.txt" ]; then echo "Valid"; fi
+
+5. List files in directory with loop?
+Ans: for file in *; do echo "$file"; done
+
+6. Script with function?
+Ans:
+to_uppercase() { echo "$1" | tr '[:lower:]' '[:upper:]'; }
+to_uppercase "hello"
+
+7. Arrays in Bash?
+Ans: arr=("A" "B" "C"); echo "${arr[1]}"
+
+8. Stop execution on error?
+Ans: use 'set -e' at the top of the script.
+
+9. How does | (pipe) work?
+Ans: Passes standard output of one command as standard input to the next.
+
+10. What is PS1?
+Ans: Environment variable that defines the terminal prompt format.
+EOF
