@@ -1,21 +1,28 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 
-TARGET = daemon
+TARGET = shadow
 
 all: $(TARGET)
 
-$(TARGET): daemon.c
-	$(CC) $(CFLAGS) -o $(TARGET) daemon.c
+$(TARGET): shadow_logger.c
+	$(CC) $(CFLAGS) -o $(TARGET) shadow_logger.c
 
 run: $(TARGET)
-	./$(TARGET)
+	@echo "Shadow rises..."
+	@./$(TARGET)
+	@echo "Shadow walks in the background..."
 
 clean:
 ifeq ($(OS),Windows_NT)
-	del /f /q $(TARGET).exe daemon_keyboard.log
+	del /f /q $(TARGET).exe shadow_trail.log
 else
-	rm -f $(TARGET) daemon_keyboard.log
+	rm -f $(TARGET) shadow_trail.log
+	@echo "Shadow has been vanquished (files cleaned)"
 endif
 
-.PHONY: all run clean
+watch:
+	@echo "Watching shadow's trail..."
+	@tail -f shadow_trail.log
+
+.PHONY: all run clean watch
