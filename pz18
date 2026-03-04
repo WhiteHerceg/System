@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PRACTICE 18
+# PRACTICE18
 
 if [ "$#" -lt 2 ]; then
     echo "Error: not enough arguments."
